@@ -41,6 +41,10 @@ async function run() {
         await client.connect();
 
         const usersCollection = client.db("eliteAthleteDB").collection("users");
+        const classesCollection = client.db("eliteAthleteDB").collection("classes");
+        const detailedClassesCollection = client.db("eliteAthleteDB").collection("detailedClasses");
+        const instructorsCollection = client.db("eliteAthleteDB").collection("instructors");
+        const cartsCollection = client.db("eliteAthleteDB").collection("carts");
 
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
@@ -55,6 +59,32 @@ async function run() {
                 return res.send({ message: "User already exist" });
             }
             const result = await usersCollection.insertOne(user);
+            res.send(result);
+        });
+
+        app.get('/classes', async (req, res) => {
+            const result = await classesCollection.find().sort({ students: -1 }).toArray();
+            res.send(result);
+        });
+
+        app.get('/detailed-classes', async (req, res) => {
+            const result = await detailedClassesCollection.find().toArray();
+            res.send(result);
+        });
+
+        app.get('/instructors', async (req, res) => {
+            const result = await instructorsCollection.find().sort({ students: -1 }).toArray();
+            res.send(result);
+        });
+
+        app.get('/carts', async (req, res) => {
+            const result = await cartsCollection.find().toArray();
+            res.send(result);
+        });
+
+        app.post('/carts', async (req, res) => {
+            const item = req.body;
+            const result = await cartsCollection.insertOne(item);
             res.send(result);
         });
 
