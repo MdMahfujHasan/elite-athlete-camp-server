@@ -227,6 +227,19 @@ async function run() {
             });
         });
 
+        app.get('/payment', async (req, res) => {
+            const email = req.query.email;
+            if (email) {
+                const query = { email: email };
+                const result = await paymentCollection.find(query).toArray();
+                res.send(result);
+            }
+            else {
+                const result = await paymentCollection.find().toArray();
+                res.send(result);
+            }
+
+        });
         // add verifyJWT
         app.post('/payment', async (req, res) => {
             const payment = req.body;
