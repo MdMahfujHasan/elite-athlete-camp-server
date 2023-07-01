@@ -90,52 +90,64 @@ async function run() {
         });
 
         // TODO: LEARN, add verifyJWT
-        // app.get('/users/admin/:email', async (req, res) => {
-        //     const email = req.params.email;
-        //     if (email !== req.decoded.email) {
-        //         res.send({ admin: false });
-        //     }
-        //     const query = { email: email };
-        //     const user = await usersCollection.findOne(query);
-        //     const result = { admin: user?.role === 'admin' };
-        //     res.send(result);
-        // });
+        app.get('/users/admin/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            if (email !== req.decoded.email) {
+                res.send({ admin: false });
+            }
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            const result = { admin: user?.role === 'admin' };
+            res.send(result);
+        });
 
-        // app.patch('/users/admin/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const query = { _id: new ObjectId(id) };
-        //     const updateDoc = {
-        //         $set: {
-        //             role: 'admin'
-        //         }
-        //     }
-        //     const result = await usersCollection.updateOne(query, updateDoc);
-        //     res.send(result);
-        // });
+        app.patch('/users/admin/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    role: 'admin'
+                }
+            }
+            const result = await usersCollection.updateOne(query, updateDoc);
+            res.send(result);
+        });
 
         // add verifyJWT
-        // app.get('/users/instructor/:email', async (req, res) => {
-        //     const email = req.params.email;
-        //     if (email !== req.decoded.email) {
-        //         res.send({ admin: false });
-        //     }
-        //     const query = { email: email };
-        //     const user = await usersCollection.findOne(query);
-        //     const result = { instructor: user?.role === 'instructor' };
-        //     res.send(result);
-        // });
+        app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            if (email !== req.decoded.email) {
+                res.send({ admin: false });
+            }
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            const result = { instructor: user?.role === 'instructor' };
+            res.send(result);
+        });
 
-        // app.patch('/users/instructor/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const query = { _id: new ObjectId(id) };
-        //     const updateDoc = {
-        //         $set: {
-        //             role: 'instructor'
-        //         }
-        //     }
-        //     const result = await usersCollection.updateOne(query, updateDoc);
-        //     res.send(result);
-        // });
+        app.patch('/users/instructor/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    role: 'instructor'
+                }
+            }
+            const result = await usersCollection.updateOne(query, updateDoc);
+            res.send(result);
+        });
+
+        app.patch('/users/role/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $unset: {
+                    role: ""
+                }
+            };
+            const result = await usersCollection.updateOne(query, updateDoc);
+            res.send(result);
+        });
 
         app.get('/classes', async (req, res) => {
             const email = req.query.email;
@@ -163,7 +175,7 @@ async function run() {
             const updateDoc = {
                 $set: {
                     status: feedback ? 'denied' : String(status),
-                    feedback: String(feedback)
+                    feedback: feedback && String(feedback)
                 }
             };
             const result = await classesCollection.updateOne(query, updateDoc);
@@ -238,8 +250,8 @@ async function run() {
                 const result = await paymentCollection.find().toArray();
                 res.send(result);
             }
-
         });
+
         // add verifyJWT
         app.post('/payment', async (req, res) => {
             const payment = req.body;
