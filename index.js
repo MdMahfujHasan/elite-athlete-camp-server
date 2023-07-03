@@ -45,6 +45,7 @@ async function run() {
         const instructorsCollection = client.db("eliteAthleteDB").collection("instructors");
         const cartsCollection = client.db("eliteAthleteDB").collection("carts");
         const paymentCollection = client.db("eliteAthleteDB").collection("payments");
+        const testimonialsCollection = client.db("eliteAthleteDB").collection("testimonials");
 
         app.post('/jwt', (req, res) => {
             const user = req.body;
@@ -74,8 +75,16 @@ async function run() {
 
         // ADD verifyJWT, verifyAdmin
         app.get('/users', async (req, res) => {
-            const result = await usersCollection.find().toArray();
-            res.send(result);
+            const email = req.query.email;
+            if (email) {
+                const query = { email: email };
+                const result = await usersCollection.find(query).toArray();
+                res.send(result);
+            }
+            else {
+                const result = await usersCollection.find().toArray();
+                res.send(result);
+            }
         });
 
         app.post('/users', async (req, res) => {
@@ -86,6 +95,18 @@ async function run() {
                 return res.send({ message: "user already exist" });
             }
             const result = await usersCollection.insertOne(user);
+            res.send(result);
+        });
+
+        app.put('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const updatedUser = req.body;
+            const query = { email: email };
+            const updateDoc = {
+                $set: updatedUser
+
+            }
+            const result = await usersCollection.updateOne(query, updateDoc);
             res.send(result);
         });
 
@@ -170,8 +191,8 @@ async function run() {
 
         app.put('/classes/:id', async (req, res) => {
             const id = req.params.id;
-            const { status, feedback } = req.body;
             const query = { _id: new ObjectId(id) };
+            const { status, feedback } = req.body;
             const updateDoc = {
                 $set: {
                     status: feedback ? 'denied' : String(status),
@@ -199,6 +220,13 @@ async function run() {
             res.send(result);
         });
 
+        app.get('/instructors/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await instructorsCollection.findOne(query);
+            res.send(result);
+        });
+
         // TODO: uncomment
         app.get('/carts', async (req, res) => {
             const email = req.query.email;
@@ -223,6 +251,11 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await cartsCollection.deleteOne(query);
+            res.send(result);
+        });
+
+        app.get('/testimonials', async (req, res) => {
+            const result = await testimonialsCollection.find().toArray();
             res.send(result);
         });
 
