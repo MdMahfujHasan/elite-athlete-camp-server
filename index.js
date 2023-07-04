@@ -50,7 +50,7 @@ async function run() {
         app.post('/jwt', (req, res) => {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '12h' });
-            res.send(token);
+            res.send({ token });
         });
 
         const verifyAdmin = async (req, res, next) => {
@@ -73,8 +73,8 @@ async function run() {
             next();
         }
 
-        // ADD verifyJWT, verifyAdmin
-        app.get('/users', async (req, res) => {
+        // After adding verifyAdmin here, i had a problem on client side so i had to remove it. When going to /classes or /profile route, it's loggingOut + redirecting me to /login page if i don't have a role (user) or my role is instructor. admin role is working fine.
+        app.get('/users', verifyJWT, async (req, res) => {
             const email = req.query.email;
             if (email) {
                 const query = { email: email };
@@ -110,7 +110,6 @@ async function run() {
             res.send(result);
         });
 
-        // TODO: LEARN, add verifyJWT
         app.get('/users/admin/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
             if (email !== req.decoded.email) {
@@ -119,6 +118,17 @@ async function run() {
             const query = { email: email };
             const user = await usersCollection.findOne(query);
             const result = { admin: user?.role === 'admin' };
+            res.send(result);
+        });
+
+        app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            if (email !== req.decoded.email) {
+                res.send({ admin: false });
+            }
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            const result = { instructor: user?.role === 'instructor' };
             res.send(result);
         });
 
@@ -134,17 +144,6 @@ async function run() {
             res.send(result);
         });
 
-        // add verifyJWT
-        app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
-            const email = req.params.email;
-            if (email !== req.decoded.email) {
-                res.send({ admin: false });
-            }
-            const query = { email: email };
-            const user = await usersCollection.findOne(query);
-            const result = { instructor: user?.role === 'instructor' };
-            res.send(result);
-        });
 
         app.patch('/users/instructor/:id', async (req, res) => {
             const id = req.params.id;
@@ -227,15 +226,14 @@ async function run() {
             res.send(result);
         });
 
-        // TODO: uncomment
-        app.get('/carts', async (req, res) => {
+        app.get('/carts', verifyJWT, async (req, res) => {
             const email = req.query.email;
             if (!email) {
                 res.send([]);
             }
-            // if (email !== req.decoded.email) {
-            //     res.status(403).send({ error: true, message: 'Forbidden access' });
-            // }
+            if (email !== req.decoded.email) {
+                res.status(403).send({ error: true, message: 'Forbidden access' });
+            }
             const query = { email: email };
             const result = await cartsCollection.find(query).toArray();
             res.send(result);
@@ -285,8 +283,7 @@ async function run() {
             }
         });
 
-        // add verifyJWT
-        app.post('/payment', async (req, res) => {
+        app.post('/payment', verifyJWT, async (req, res) => {
             const payment = req.body;
             const insertResult = await paymentCollection.insertOne(payment);
             const query = { _id: { $in: payment.cartItems.map(id => new ObjectId(id)) } };
